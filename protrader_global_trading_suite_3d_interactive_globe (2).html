@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProTrader Suite - Interactive 3D Globe & Regional Strategy Engine</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: 'var(--color-brand-50, #f0f7ff)',
+                            100: 'var(--color-brand-100, #e0effe)',
+                            500: 'var(--color-brand-500, #3b82f6)',
+                            600: 'var(--color-brand-600, #2563eb)',
+                            700: 'var(--color-brand-700, #1d4ed8)',
+                            900: 'var(--color-brand-900, #1e3a8a)',
+                        },
+                        accent: {
+                            500: 'var(--color-accent-500, #f59e0b)',
+                            600: 'var(--color-accent-600, #d97706)',
+                        },
+                        panel: {
+                            bg: 'var(--color-panel-bg, rgba(15, 23, 42, 0.88))',
+                            border: 'var(--color-panel-border, rgba(255, 255, 255, 0.08))',
+                            header: 'var(--color-panel-header, rgba(15, 23, 42, 0.95))',
+                        },
+                        gain: 'var(--color-gain, #10b981)',
+                        loss: 'var(--color-loss, #ef4444)',
+                    },
+                    fontFamily: {
+                        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Three.js for 3D Interactive Globe -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            /* DEFAULT DARK SLATE THEME */
+            --bg-body: #080d1a;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --color-brand-500: #3b82f6;
+            --color-brand-600: #2563eb;
+            --color-brand-700: #1d4ed8;
+            --color-brand-900: #1e3a8a;
+            --color-accent-500: #f59e0b;
+            --color-panel-bg: rgba(15, 23, 42, 0.88);
+            --color-panel-border: rgba(255, 255, 255, 0.1);
+            --color-panel-header: rgba(15, 23, 42, 0.95);
+            --color-gain: #10b981;
+            --color-loss: #ef4444;
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            --chart-grid: rgba(255, 255, 255, 0.05);
+        }
+
+        /* OXFORD & CRIMSON THEME */
+        [data-theme="oxford"] {
+            --bg-body: #0a0e17;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --color-brand-500: #991b1b;
+            --color-brand-600: #7f1d1d;
+            --color-brand-700: #450a0a;
+            --color-brand-900: #1e1b4b;
+            --color-accent-500: #d97706;
+            --color-panel-bg: rgba(15, 23, 42, 0.9);
+            --color-panel-border: rgba(153, 27, 27, 0.25);
+            --color-panel-header: rgba(30, 27, 75, 0.9);
+            --color-gain: #059669;
+            --color-loss: #dc2626;
+            --chart-grid: rgba(255, 255, 255, 0.05);
+        }
+
+        /* STANFORD CARDINAL & GOLD THEME */
+        [data-theme="stanford"] {
+            --bg-body: #0d090a;
+            --text-main: #fafafa;
+            --text-muted: #a1a1aa;
+            --color-brand-500: #8c1515;
+            --color-brand-600: #701010;
+            --color-brand-700: #540c0c;
+            --color-brand-900: #2b0606;
+            --color-accent-500: #eab308;
+            --color-panel-bg: rgba(24, 18, 19, 0.9);
+            --color-panel-border: rgba(234, 179, 8, 0.2);
+            --color-panel-header: rgba(43, 6, 6, 0.9);
+            --color-gain: #22c55e;
+            --color-loss: #ef4444;
+            --chart-grid: rgba(255, 255, 255, 0.05);
+        }
+
+        /* UCLA BLUE & GOLD THEME */
+        [data-theme="ucla"] {
+            --bg-body: #051329;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --color-brand-500: #2774ae;
+            --color-brand-600: #005587;
+            --color-brand-700: #003b5c;
+            --color-brand-900: #002238;
+            --color-accent-500: #ffc72c;
+            --color-panel-bg: rgba(10, 30, 60, 0.88);
+            --color-panel-border: rgba(255, 199, 44, 0.25);
+            --color-panel-header: rgba(0, 34, 56, 0.95);
+            --color-gain: #10b981;
+            --color-loss: #f43f5e;
+            --chart-grid: rgba(255, 255, 255, 0.06);
+        }
+
+        /* MINIMAL LIGHT ELEGANTE THEME */
+        [data-theme="minimal-light"] {
+            --bg-body: #f1f5f9;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --color-brand-500: #0f172a;
+            --color-brand-600: #1e293b;
+            --color-brand-700: #334155;
+            --color-brand-900: #e2e8f0;
+            --color-accent-500: #2563eb;
+            --color-panel-bg: rgba(255, 255, 255, 0.92);
+            --color-panel-border: rgba(15, 23, 42, 0.12);
+            --color-panel-header: rgba(241, 245, 249, 0.95);
+            --color-gain: #059669;
+            --color-loss: #d97706;
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+            --chart-grid: rgba(0, 0, 0, 0.06);
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-body); }
+        ::-webkit-scrollbar-thumb { background: var(--color-brand-700); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--color-brand-500); }
+
+        input[type=range] { accent-color: var(--color-brand-500); }
+
+        .glass-card {
+            background: var(--color-panel-bg);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--color-panel-border);
+            box-shadow: var(--card-shadow);
+            transition: border-color 0.3s ease, background 0.3s ease, transform 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background-color: var(--color-brand-600);
+            color: #ffffff !important;
+            box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .theme-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s ease, ring 0.2s ease;
+        }
+        .theme-dot:hover {
+            transform: scale(1.2);
+        }
+        .theme-dot.selected {
+            ring: 2px solid #ffffff;
+            transform: scale(1.15);
+        }
+
+        #globeCanvas {
+            cursor: grab;
+        }
+        #globeCanvas:active {
+            cursor: grabbing;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans antialiased select-none">
+
+    <!-- MASTER HEADER -->
+    <header class="border-b px-4 py-2.5 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-50 shadow-xl transition-colors duration-300" style="background-color: var(--color-panel-header); border-color: var(--color-panel-border);">
+        <div class="flex items-center space-x-3">
+            <div class="p-2 rounded-xl text-white font-black text-xl flex items-center justify-center w-10 h-10 shadow-lg transition-colors duration-300" style="background-color: var(--color-brand-600);">
+                <i class="fa-solid fa-earth-americas"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-tight flex items-center gap-2">
+                    ProTrader <span class="px-2 py-0.5 text-xs rounded-full font-mono font-bold tracking-wide transition-colors" style="background-color: var(--color-brand-900); color: var(--color-accent-500); border: 1px solid var(--color-panel-border);">Global Interactive Suite</span>
+                </h1>
+                <p class="text-[11px] opacity-70">Interactive 3D Globe Zoom & Dynamic Regional Equity Intelligence Engine</p>
+            </div>
+        </div>
+
+        <!-- CENTER: NAVIGATION TABS & BRAND THEME SWITCHER -->
+        <div class="flex flex-wrap items-center gap-3">
+            <!-- TAB NAVIGATION -->
+            <div class="flex items-center p-1 rounded-xl font-mono text-xs transition-colors" style="background-color: var(--bg-body); border: 1px solid var(--color-panel-border);">
+                <button id="btnTabGlobe" onclick="switchTab('globe')" class="tab-btn active px-4 py-1.5 rounded-lg font-bold transition flex items-center gap-2">
+                    <i class="fa-solid fa-globe"></i> 3D Globe Explorer
+                </button>
+                <button id="btnTabRanker" onclick="switchTab('ranker')" class="tab-btn opacity-70 hover:opacity-100 px-4 py-1.5 rounded-lg font-bold transition flex items-center gap-2">
+                    <i class="fa-solid fa-list-check"></i> Strategy Ranker
+                </button>
+                <button id="btnTabTerminal" onclick="switchTab('terminal')" class="tab-btn opacity-70 hover:opacity-100 px-4 py-1.5 rounded-lg font-bold transition flex items-center gap-2">
+                    <i class="fa-solid fa-terminal"></i> Trading Terminal
+                </button>
+            </div>
+
+            <!-- BRAND COLOR / THEME SELECTOR -->
+            <div class="flex items-center space-x-2 px-3 py-1.5 rounded-xl border font-mono text-xs shadow-inner" style="background-color: var(--bg-body); border-color: var(--color-panel-border);">
+                <span class="text-[10px] font-bold uppercase tracking-wider opacity-60 mr-1 hidden sm:inline"><i class="fa-solid fa-palette mr-1"></i>Theme:</span>
+                <div class="flex items-center space-x-1.5">
+                    <div title="Default Dark Slate" onclick="setTheme('default')" class="theme-dot selected border border-white/40" style="background: linear-gradient(135deg, #3b82f6, #0f172a);"></div>
+                    <div title="Oxford Crimson" onclick="setTheme('oxford')" class="theme-dot border border-white/40" style="background: linear-gradient(135deg, #991b1b, #1e1b4b);"></div>
+                    <div title="Stanford Cardinal & Gold" onclick="setTheme('stanford')" class="theme-dot border border-white/40" style="background: linear-gradient(135deg, #8c1515, #eab308);"></div>
+                    <div title="UCLA Blue & Gold" onclick="setTheme('ucla')" class="theme-dot border border-white/40" style="background: linear-gradient(135deg, #2774ae, #ffc72c);"></div>
+                    <div title="Minimal Clean Light" onclick="setTheme('minimal-light')" class="theme-dot border border-slate-400" style="background: linear-gradient(135deg, #0f172a, #ffffff);"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- METRICS & REGION DISPLAY -->
+        <div class="flex items-center space-x-4 text-xs px-4 py-1.5 rounded-xl font-mono border" style="background-color: var(--bg-body); border-color: var(--color-panel-border);">
+            <div>
+                <div class="text-[9px] uppercase tracking-wider opacity-60">Active Region</div>
+                <div id="hdrActiveRegion" class="font-bold text-sm flex items-center gap-1.5" style="color: var(--color-accent-500);">
+                    <i class="fa-solid fa-earth-americas"></i> Worldwide (All)
+                </div>
+            </div>
+            <div class="h-7 w-px opacity-20" style="background-color: var(--text-main);"></div>
+            <div>
+                <div class="text-[9px] uppercase tracking-wider opacity-60">Est. Monthly Yield</div>
+                <div id="hdrEstYield" class="font-bold text-sm" style="color: var(--color-gain);">+$2,450.00 (+4.90%)</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN WRAPPER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 flex flex-col gap-4">
+
+        <!-- TAB 0: INTERACTIVE 3D GLOBE VIEW -->
+        <div id="viewGlobe" class="grid grid-cols-12 gap-5">
+            <!-- LEFT 3D GLOBE CANVAS & CONTROLS -->
+            <section class="col-span-12 lg:col-span-8 flex flex-col gap-4">
+                <div class="glass-card rounded-2xl p-4 flex flex-col space-y-3 relative overflow-hidden h-[540px]">
+                    <div class="flex justify-between items-center z-10">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-bold uppercase tracking-wider font-mono flex items-center gap-2">
+                                <i class="fa-solid fa-globe" style="color: var(--color-brand-500);"></i> 3D Globe Navigation
+                            </span>
+                            <span class="text-[10px] px-2 py-0.5 rounded font-mono font-bold border" style="background-color: var(--bg-body); border-color: var(--color-panel-border);">
+                                Click region to zoom & inspect stocks
+                            </span>
+                        </div>
+                        <button onclick="resetGlobeView()" class="text-[10px] font-mono font-bold px-3 py-1 rounded-lg border transition hover:opacity-100 opacity-80" style="background-color: var(--bg-body); border-color: var(--color-panel-border);">
+                            <i class="fa-solid fa-rotate-left mr-1"></i> Reset Zoom
+                        </button>
+                    </div>
+
+                    <!-- GLOBE CANVAS -->
+                    <div class="relative w-full h-full rounded-xl overflow-hidden">
+                        <canvas id="globeCanvas" class="w-full h-full"></canvas>
+                        
+                        <!-- OVERLAY REGION HOVER BANNER -->
+                        <div id="globeTooltip" class="absolute bottom-4 left-4 bg-black/75 backdrop-blur-md p-3 rounded-xl border font-mono text-xs hidden pointer-events-none transition-all shadow-2xl" style="border-color: var(--color-brand-500);">
+                            <div class="text-[10px] opacity-60 uppercase tracking-wider">Region Targeted</div>
+                            <div id="globeTooltipName" class="font-bold text-sm" style="color: var(--color-accent-500);">United States</div>
+                            <div id="globeTooltipInfo" class="text-[11px] opacity-80 mt-0.5">Click to focus camera and list regional assets.</div>
+                        </div>
+
+                        <!-- FLOATING REGION SELECTOR BUTTONS FOR TOUCH & QUICK ACCESS -->
+                        <div class="absolute top-3 right-3 flex flex-col gap-1.5 z-10 font-mono text-[11px]">
+                            <button onclick="focusRegion('USA')" class="px-3 py-1.5 rounded-lg border backdrop-blur-md transition text-left flex items-center justify-between gap-3 hover:scale-105" style="background-color: rgba(15, 23, 42, 0.85); border-color: var(--color-panel-border);">
+                                <span>🇺🇸 USA</span> <i class="fa-solid fa-crosshairs opacity-50"></i>
+                            </button>
+                            <button onclick="focusRegion('China')" class="px-3 py-1.5 rounded-lg border backdrop-blur-md transition text-left flex items-center justify-between gap-3 hover:scale-105" style="background-color: rgba(15, 23, 42, 0.85); border-color: var(--color-panel-border);">
+                                <span>🇨🇳 China</span> <i class="fa-solid fa-crosshairs opacity-50"></i>
+                            </button>
+                            <button onclick="focusRegion('Europe')" class="px-3 py-1.5 rounded-lg border backdrop-blur-md transition text-left flex items-center justify-between gap-3 hover:scale-105" style="background-color: rgba(15, 23, 42, 0.85); border-color: var(--color-panel-border);">
+                                <span>🇪🇺 Europe</span> <i class="fa-solid fa-crosshairs opacity-50"></i>
+                            </button>
+                            <button onclick="focusRegion('Japan')" class="px-3 py-1.5 rounded-lg border backdrop-blur-md transition text-left flex items-center justify-between gap-3 hover:scale-105" style="background-color: rgba(15, 23, 42, 0.85); border-color: var(--color-panel-border);">
+                                <span>🇯🇵 Japan</span> <i class="fa-solid fa-crosshairs opacity-50"></i>
+                            </button>
+                            <button onclick="focusRegion('Brazil')" class="px-3 py-1.5 rounded-lg border backdrop-blur-md transition text-left flex items-center justify-between gap-3 hover:scale-105" style="background-color: rgba(15, 23, 42, 0.85); border-color: var(--color-panel-border);">
+                                <span>🇧🇷 Brazil</span> <i class="fa-solid fa-crosshairs opacity-50"></i>
+                            </button>
+                            <button onclick="focusRegion('Global')" class="px-3 py-1.5 rounded-lg border backdrop-blur-md transition text-left flex items-center justify-between gap-3 hover:scale-105" style="background-color: rgba(15, 23, 42, 0.85); border-color: var(--color-brand-500);">
+                                <span>🌐 Global (All)</span> <i class="fa-solid fa-earth-americas opacity-50"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT PANEL: REGIONAL OVERVIEW & FILTERED STOCKS -->
+            <section class="col-span-12 lg:col-span-4 flex flex-col gap-4">
+                <div class="glass-card rounded-2xl p-5 flex flex-col space-y-4 h-[540px]">
+                    <div class="flex justify-between items-center border-b pb-3" style="border-color: var(--color-panel-border);">
+                        <div>
+                            <h2 class="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-building-columns" style="color: var(--color-accent-500);"></i> Regional Market Focus
+                            </h2>
+                            <p id="globeRegionSubtitle" class="text-[11px] opacity-60 font-mono">Showing all global equities</p>
+                        </div>
+                        <span id="regionBadge" class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg border" style="background-color: var(--color-brand-900); border-color: var(--color-brand-500); color: var(--color-brand-500);">
+                            ALL MARKETS
+                        </span>
+                    </div>
+
+                    <!-- REGION STATS OVERVIEW CARD -->
+                    <div class="grid grid-cols-2 gap-2 font-mono text-xs">
+                        <div class="p-2.5 rounded-xl border" style="background-color: var(--bg-body); border-color: var(--color-panel-border);">
+                            <span class="text-[9px] opacity-60 block uppercase">Listed Equities</span>
+                            <span id="regionCount" class="text-base font-bold">12 Assets</span>
+                        </div>
+                        <div class="p-2.5 rounded-xl border" style="background-color: var(--bg-body); border-color: var(--color-panel-border);">
+                            <span class="text-[9px] opacity-60 block uppercase">Avg Market Vol</span>
+                            <span id="regionBeta" class="text-base font-bold" style="color: var(--color-accent-500);">1.35x Beta</span>
+                        </div>
+                    </div>
+
+                    <!-- FILTERED STOCKS LIST -->
+                    <div class="flex-1 overflow-y-auto space-y-2 pr-1 font-mono text-xs" id="globeStockList">
+                        <!-- Injected via JS -->
+                    </div>
+
+                    <button onclick="switchTab('ranker')" class="w-full text-center py-2 rounded-xl text-xs font-bold font-mono text-white shadow-lg transition hover:opacity-90" style="background-color: var(--color-brand-600);">
+                        Open Strategy Ranker for Active Region <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 1: STOCK RANKER & STRATEGY ENGINE -->
+        <div id="viewRanker" class="hidden grid-cols-12 gap-5">
+            
+            <!-- LEFT COLUMN: VARIABLE SLIDERS & ENGINE CONTROLS -->
+            <section class="col-span-12 lg:col-span-4 flex flex-col gap-4">
+                <div class="glass-card rounded-2xl p-5 flex flex-col gap-4">
+                    <div class="flex justify-between items-center border-b pb-3" style="border-color: var(--color-panel-border);">
+                        <h2 class="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-sliders" style="color: var(--color-brand-500);"></i> Strategy Variables
+                        </h2>
+                        <button onclick="resetSliders()" class="text-[10px] opacity-70 hover:opacity-100 px-2.5 py-1 rounded-lg border transition" style="background-color: var(--bg-body); border-color: var(--color-panel-border);">
+                            Reset Defaults
+                        </button>
+                    </div>
+
+                    <!-- REGION FILTER IN RANKER -->
+                    <div class="space-y-1 font-mono text-xs">
+                        <label class="block opacity-80 text-[11px]">Filter Strategy by Country / Region</label>
+                        <select id="rankerRegionFilter" onchange="onRankerRegionChange(this.value)" class="w-full border rounded-lg p-2 font-bold focus:outline-none transition-colors" style="background-color: var(--bg-body); border-color: var(--color-panel-border);">
+                            <option value="Global">🌐 Worldwide / All Regions</option>
+                            <option value="USA">🇺🇸 United States</option>
+                            <option value="China">🇨🇳 China</option>
+                            <option value="Europe">🇪🇺 European Union</option>
+                            <option value="Japan">🇯🇵 Japan</option>
+                            <option value="Brazil">🇧🇷 Brazil</option>
+                        </select>
+                    </div>
+
+                    <!-- SLIDER 1: Target Capital Budget -->
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center text-xs font-mono">
+                            <span class="opacity-80">Target Capital Budget</span>
+                            <span id="valBudget" class="font-bold" style="color: var(--color-accent-500);">$50,000</span>
+                        </div>
+                        <input type="range" id="sliderBudget" min="1000" max="500000" step="1000" value="50000" oninput="recalculateEngine()" class="w-full h-2 rounded-lg cursor-pointer">
+                        <div class="flex justify-between text-[9px] opacity-50 font-mono">
+                            <span>$1k</span>
+                            <span>$250k</span>
+                            <span>$500k</span>
+                        </div>
+                    </div>
+
+                    <!-- SLIDER 2: Volatility Tolerance -->
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center text-xs font-mono">
+                            <span class="opacity-80">Market Volatility Tolerance</span>
+                            <span id="valVolatility" class="font-bold" style="color: var(--color-accent-500);">1.5x (Medium)</span>
+                        </div>
+                        <input type="range" id="sliderVolatility" min="0.5" max="4.0" step="0.1" value="1.5" oninput="recalculateEngine()" class="w-full h-2 rounded-lg cursor-pointer">
+                        <div class="flex justify-between text-[9px] opacity-50 font-mono">
+                            <span>Low (0.5x)</span>
+                            <span>Balanced (1.5x)</span>
+                            <span>Extreme (4.0x)</span>
+                        </div>
+                    </div>
+
+                    <!-- SLIDER 3: Simulation Engine Speed -->
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center text-xs font-mono">
+                            <span class="opacity-80">Simulation Tick Speed</span>
+                            <span id="valSpeed" class="font-bold" style="color: var(--color-brand-500);">800 ms</span>
+                        </div>
+                        <input type="range" id="sliderSpeed" min="200" max="2000" step="100" value="800" oninput="recalculateEngine()" class="w-full h-2 rounded-lg cursor-pointer">
+                        <div class="flex justify-between text-[9px] opacity-50 font-mono">
+                            <span>Fast (200ms)</span>
+                            <span>Normal (800ms)</span>
+                            <span>Slow (2000ms)</span>
+                        </div>
+                    </div>
+
+                    <!-- SLIDER 4: Max Leverage -->
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center text-xs font-mono">
+                            <span class="opacity-80">Max Position Leverage</span>
+                            <span id="valLeverage" class="font-bold" style="color: var(--color-loss);">1.0x (Spot)</span>
+                        </div>
+                        <input type="range" id="sliderLeverage" min="1.0" max="10.0" step="0.5" value="1.0" oninput="recalculateEngine()" class="w-full h-2 rounded-lg cursor-pointer">
+                        <div class="flex justify-between text-[9px] opacity-50 font-mono">
+                            <span>1.0x (Spot)</span>
+                            <span>5.0x</span>
+                            <span>10.0x (Margin)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LIVE METRIC TARGET BREAKDOWN CARD -->
+                <div class="glass-card rounded-2xl p-5 space-y-3 font-mono text-xs">
+                    <div class="text-xs font-bold uppercase tracking-wider flex items-center justify-between border-b pb-2" style="border-color: var(--color-panel-border);">
+                        <span><i class="fa-solid fa-calculator mr-1.5" style="color: var(--color-gain);"></i> Engine Goal Output</span>
+                        <span class="text-[10px] opacity-50">Live Calculation</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="opacity-70">Total Capital Budget:</span>
+                        <span id="metricBudget" class="font-bold">$50,000.00</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="opacity-70">Buying Power w/ Leverage:</span>
+                        <span id="metricBuyingPower" class="font-bold" style="color: var(--color-accent-500);">$50,000.00</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="opacity-70">Suggested Max Risk / Trade:</span>
+                        <span id="metricMaxRisk" class="font-bold" style="color: var(--color-loss);">$1,000.00 (2.0%)</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="opacity-70">Est. Annualized Return:</span>
+                        <span id="metricEstReturn" class="font-bold" style="color: var(--color-gain);">+58.8%</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="opacity-70">Top Regional Winner:</span>
+                        <span id="metricTopWinner" class="font-bold" style="color: var(--color-accent-500);">NVDA (Score 94.2)</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT COLUMN: RANKINGS & SIDE-BY-SIDE COMPARISON -->
+            <section class="col-span-12 lg:col-span-8 flex flex-col gap-4">
+                
+                <!-- RANKED STOCKS TABLE -->
+                <div class="glass-card rounded-2xl flex flex-col overflow-hidden">
+                    <div class="p-4 border-b flex flex-wrap justify-between items-center gap-2" style="background-color: var(--color-panel-header); border-color: var(--color-panel-border);">
+                        <div>
+                            <h2 class="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-trophy" style="color: var(--color-accent-500);"></i> Top Ranked Regional Equities
+                            </h2>
+                            <p class="text-[11px] opacity-60">Algorithmic selection based on current market parameters and chosen region.</p>
+                        </div>
+                        <div class="text-[10px] font-mono px-3 py-1 rounded-lg border" style="background-color: var(--bg-body); border-color: var(--color-panel-border);">
+                            <i class="fa-solid fa-square-check mr-1" style="color: var(--color-brand-500);"></i> Select checkboxes to compare side-by-side
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="font-mono border-b text-[10px] uppercase opacity-70" style="background-color: var(--bg-body); border-color: var(--color-panel-border);">
+                                <tr>
+                                    <th class="p-3 text-center">Compare</th>
+                                    <th class="p-3">Rank & Symbol</th>
+                                    <th class="p-3">Country / Sector</th>
+                                    <th class="p-3">Price</th>
+                                    <th class="p-3">Algorithmic Score</th>
+                                    <th class="p-3">Trade Action</th>
+                                    <th class="p-3 text-right">Est. Monthly Gain</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rankingTableBody" class="divide-y font-mono" style="border-color: var(--color-panel-border);">
+                                <!-- Injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SIDE-BY-SIDE COMPARISON MODULE -->
+                <div class="glass-card rounded-2xl p-5 space-y-4">
+                    <div class="flex justify-between items-center border-b pb-3" style="border-color: var(--color-panel-border);">
+                        <h3 class="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-code-compare" style="color: var(--color-brand-500);"></i> Side-by-Side Asset Matchup
+                        </h3>
+                        <span id="matchupWinnerBadge" class="text-xs font-bold font-mono px-3 py-1 rounded-full border shadow-sm transition-all" style="background-color: var(--bg-body); color: var(--color-gain); border-color: var(--color-gain);">
+                            WINNER: NVDA (+14.2% Alpha Score)
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="comparisonContainer">
+                        <!-- Dynamic side by side cards injected via JS -->
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 2: LIVE TRADING TERMINAL -->
+        <div id="viewTerminal" class="hidden grid-cols-12 gap-5">
+            
+            <!-- LEFT PANEL: WATCHLIST & SYMBOL SELECTOR -->
+            <section class="col-span-12 md:col-span-3 flex flex-col gap-4">
+                <div class="glass-card rounded-2xl p-4 flex flex-col h-[620px]">
+                    <div class="flex justify-between items-center border-b pb-3 mb-3" style="border-color: var(--color-panel-border);">
+                        <span class="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-list-ul" style="color: var(--color-brand-500);"></i> Asset Watchlist
+                        </span>
+                        <span class="text-[10px] px-2 py-0.5 rounded font-mono font-bold border" style="color: var(--color-gain); border-color: var(--color-gain); background-color: var(--bg-body);">
+                            LIVE TICKS
+                        </span>
+                    </div>
+                    
+                    <div id="watchlistContainer" class="flex-1 overflow-y-auto space-y-1.5 pr-1 font-mono">
+                        <!-- Watchlist items injected via JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- CENTER PANEL: LIVE CHART & ORDER EXECUTION -->
+            <section class="col-span-12 md:col-span-6 flex flex-col gap-4">
+                
+                <!-- LIVE CHART CARD -->
+                <div class="glass-card rounded-2xl p-5 flex flex-col space-y-3">
+                    <div class="flex justify-between items-center border-b pb-3" style="border-color: var(--color-panel-border);">
+                        <div class="flex items-center space-x-3">
+                            <span id="chartSymbol" class="text-xl font-bold font-mono">NVDA</span>
+                            <span id="chartPrice" class="text-lg font-bold font-mono" style="color: var(--color-gain);">$124.50</span>
+                            <span id="chartChange" class="text-xs font-mono font-semibold" style="color: var(--color-gain);">+2.45%</span>
+                        </div>
+                        <div class="flex items-center space-x-2 font-mono text-xs">
+                            <button onclick="setChartInterval('1m')" class="px-2.5 py-1 rounded-lg border opacity-80 hover:opacity-100 transition" style="background-color: var(--bg-body); border-color: var(--color-panel-border);">1M</button>
+                            <button onclick="setChartInterval('5m')" class="px-2.5 py-1 rounded-lg font-bold text-white transition" style="background-color: var(--color-brand-600);">5M</button>
+                            <button onclick="setChartInterval('1h')" class="px-2.5 py-1 rounded-lg border opacity-80 hover:opacity-100 transition" style="background-color: var(--bg-body); border-color: var(--color-panel-border);">1H</button>
+                        </div>
+                    </div>
+
+                    <!-- CHART CANVAS -->
+                    <div class="relative w-full h-[300px]">
+                        <canvas id="terminalChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- EXECUTION ORDER FORM -->
+                <div class="glass-card rounded-2xl p-5 font-mono text-xs space-y-3">
+                    <div class="flex justify-between items-center border-b pb-2" style="border-color: var(--color-panel-border);">
+                        <span class="font-bold uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-bolt" style="color: var(--color-accent-500);"></i> Instant Order Execution
+                        </span>
+                        <span class="text-[10px] opacity-70">Available Cash: <strong id="orderAvailableCash" class="font-bold">$50,000.00</strong></span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] uppercase mb-1 opacity-70">Position Size (USD)</label>
+                            <input type="number" id="orderAmount" value="5000" step="500" class="w-full border rounded-lg p-2.5 font-bold focus:outline-none transition-colors" style="background-color: var(--bg-body); border-color: var(--color-panel-border);">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase mb-1 opacity-70">Execution Leverage</label>
+                            <select id="orderLeverage" class="w-full border rounded-lg p-2.5 font-bold focus:outline-none transition-colors" style="background-color: var(--bg-body); border-color: var(--color-panel-border);">
+                                <option value="1">1.0x (Spot)</option>
+                                <option value="2">2.0x Margin</option>
+                                <option value="5">5.0x Margin</option>
+                                <option value="10">10.0x High Leverage</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 pt-1">
+                        <button onclick="executeTrade('BUY')" class="text-white font-bold py-3 rounded-xl text-sm shadow-lg transition flex items-center justify-center gap-2 hover:opacity-90" style="background-color: var(--color-gain);">
+                            <i class="fa-solid fa-arrow-trend-up"></i> BUY / LONG
+                        </button>
+                        <button onclick="executeTrade('SELL')" class="text-white font-bold py-3 rounded-xl text-sm shadow-lg transition flex items-center justify-center gap-2 hover:opacity-90" style="background-color: var(--color-loss);">
+                            <i class="fa-solid fa-arrow-trend-down"></i> SELL / SHORT
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT PANEL: ACTIVE POSITIONS & NEWS FEED -->
+            <section class="col-span-12 md:col-span-3 flex flex-col gap-4">
+                
+                <!-- POSITIONS SUMMARY -->
+                <div class="glass-card rounded-2xl p-4 flex flex-col h-[300px]">
+                    <div class="flex justify-between items-center border-b pb-2 mb-2" style="border-color: var(--color-panel-border);">
+                        <span class="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-briefcase" style="color: var(--color-accent-500);"></i> Open Positions
+                        </span>
+                        <span id="activePositionsCount" class="text-[10px] px-2 py-0.5 rounded font-mono border" style="background-color: var(--bg-body); border-color: var(--color-panel-border);">0 Open</span>
+                    </div>
+                    
+                    <div id="positionsList" class="flex-1 overflow-y-auto space-y-2 font-mono text-xs pr-1">
+                        <div class="text-center py-10 text-[11px] opacity-50">No active positions.<br>Execute orders from the panel.</div>
+                    </div>
+                </div>
+
+                <!-- LIVE NEWS FEED -->
+                <div class="glass-card rounded-2xl p-4 flex flex-col h-[300px]">
+                    <div class="flex justify-between items-center border-b pb-2 mb-2" style="border-color: var(--color-panel-border);">
+                        <span class="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-newspaper" style="color: var(--color-brand-500);"></i> Global Wire
+                        </span>
+                        <span class="text-[9px] px-2 py-0.5 rounded font-mono font-bold border" style="color: var(--color-brand-500); border-color: var(--color-brand-500); background-color: var(--bg-body);">REALTIME</span>
+                    </div>
+                    
+                    <div id="newsFeed" class="flex-1 overflow-y-auto space-y-2 pr-1 font-mono text-[11px]">
+                        <!-- News items injected via JS -->
+                    </div>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <script>
+        // MASTER MULTI-COUNTRY DATABASE
+        const stockDatabase = [
+            // UNITED STATES (USA)
+            { symbol: 'NVDA', name: 'NVIDIA Corp.', country: 'USA', flag: '🇺🇸', sector: 'Tech / AI', price: 124.50, beta: 1.85, baseScore: 94, momentum: 0.94, sharpe: 2.4, yieldBase: 0.082, history: [] },
+            { symbol: 'AAPL', name: 'Apple Inc.', country: 'USA', flag: '🇺🇸', sector: 'Consumer Tech', price: 218.20, beta: 0.95, baseScore: 82, momentum: 0.72, sharpe: 1.8, yieldBase: 0.042, history: [] },
+            { symbol: 'MSFT', name: 'Microsoft Corp.', country: 'USA', flag: '🇺🇸', sector: 'Software / Cloud', price: 448.90, beta: 0.90, baseScore: 89, momentum: 0.80, sharpe: 2.2, yieldBase: 0.051, history: [] },
+            { symbol: 'TSLA', name: 'Tesla Motors', country: 'USA', flag: '🇺🇸', sector: 'EV / Tech', price: 245.80, beta: 2.10, baseScore: 83, momentum: 0.88, sharpe: 1.7, yieldBase: 0.075, history: [] },
+
+            // CHINA
+            { symbol: 'BABA', name: 'Alibaba Group', country: 'China', flag: '🇨🇳', sector: 'E-Commerce / Cloud', price: 78.40, beta: 1.65, baseScore: 76, momentum: 0.70, sharpe: 1.4, yieldBase: 0.062, history: [] },
+            { symbol: 'TCEHY', name: 'Tencent Holdings', country: 'China', flag: '🇨🇳', sector: 'Gaming & Media', price: 48.90, beta: 1.40, baseScore: 85, momentum: 0.82, sharpe: 1.9, yieldBase: 0.071, history: [] },
+            { symbol: 'BYDDY', name: 'BYD Auto Co.', country: 'China', flag: '🇨🇳', sector: 'EV & Clean Energy', price: 58.10, beta: 1.75, baseScore: 88, momentum: 0.89, sharpe: 2.1, yieldBase: 0.080, history: [] },
+
+            // EUROPE
+            { symbol: 'ASML', name: 'ASML Holding', country: 'Europe', flag: '🇪🇺', sector: 'Semiconductors', price: 920.50, beta: 1.30, baseScore: 91, momentum: 0.86, sharpe: 2.3, yieldBase: 0.074, history: [] },
+            { symbol: 'SAP', name: 'SAP SE', country: 'Europe', flag: '🇪🇺', sector: 'Enterprise Tech', price: 194.20, beta: 0.85, baseScore: 81, momentum: 0.75, sharpe: 1.85, yieldBase: 0.049, history: [] },
+            { symbol: 'MC.PA', name: 'LVMH Moët Hennessy', country: 'Europe', flag: '🇪🇺', sector: 'Luxury Goods', price: 710.00, beta: 1.10, baseScore: 79, momentum: 0.68, sharpe: 1.6, yieldBase: 0.045, history: [] },
+
+            // JAPAN
+            { symbol: '7203.T', name: 'Toyota Motor Corp', country: 'Japan', flag: '🇯🇵', sector: 'Automotive', price: 185.30, beta: 0.80, baseScore: 77, momentum: 0.65, sharpe: 1.5, yieldBase: 0.039, history: [] },
+            { symbol: 'SONY', name: 'Sony Group Corp', country: 'Japan', flag: '🇯🇵', sector: 'Electronics & Media', price: 88.40, beta: 1.15, baseScore: 83, momentum: 0.79, sharpe: 1.9, yieldBase: 0.055, history: [] },
+
+            // BRAZIL
+            { symbol: 'PBR', name: 'Petrobras', country: 'Brazil', flag: '🇧🇷', sector: 'Energy & Oil', price: 14.80, beta: 1.95, baseScore: 74, momentum: 0.73, sharpe: 1.3, yieldBase: 0.095, history: [] },
+            { symbol: 'VALE', name: 'Vale S.A.', country: 'Brazil', flag: '🇧🇷', sector: 'Mining & Materials', price: 11.20, beta: 1.60, baseScore: 72, momentum: 0.62, sharpe: 1.2, yieldBase: 0.088, history: [] }
+        ];
+
+        // GLOBE REGION COORDINATES (LAT, LON) FOR CAMERA FOCUS
+        const regionCoordinates = {
+            'USA': { lat: 38.0, lon: -97.0, zoom: 3.2, name: 'United States', flag: '🇺🇸' },
+            'China': { lat: 35.0, lon: 104.0, zoom: 3.3, name: 'China', flag: '🇨🇳' },
+            'Europe': { lat: 50.0, lon: 10.0, zoom: 3.1, name: 'European Union', flag: '🇪🇺' },
+            'Japan': { lat: 36.0, lon: 138.0, zoom: 3.8, name: 'Japan', flag: '🇯🇵' },
+            'Brazil': { lat: -14.0, lon: -51.0, zoom: 3.2, name: 'Brazil', flag: '🇧🇷' },
+            'Global': { lat: 20.0, lon: 0.0, zoom: 5.0, name: 'Worldwide (All)', flag: '🌐' }
+        };
+
+        // GLOBAL APPLICATION STATE
+        let portfolioBalance = 50000.00;
+        let openPositions = [];
+        let selectedForComparison = ['NVDA', 'ASML'];
+        let activeTerminalSymbol = 'NVDA';
+        let currentSelectedRegion = 'Global';
+        let terminalChart = null;
+        let simIntervalId = null;
+
+        // Three.js Globe Variables
+        let scene, camera, renderer, globeGroup, pinGroup;
+        let targetCameraPos = { x: 0, y: 0, z: 5 };
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        let raycaster, mouse;
+
+        // Initialize Stock Price Histories
+        stockDatabase.forEach(stock => {
+            let p = stock.price;
+            stock.history = [];
+            for (let i = 0; i < 30; i++) {
+                p += (Math.random() - 0.49) * (p * 0.008);
+                stock.history.push(p);
+            }
+            stock.price = p;
+        });
+
+        function initGlobe() {
+            const container = document.getElementById('globeCanvas').parentElement;
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+            camera.position.z = 5;
+
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('globeCanvas'), antialias: true, alpha: true });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            // Globe Group
+            globeGroup = new THREE.Group();
+            scene.add(globeGroup);
+
+            // Base Sphere (Ocean)
+            const globeGeo = new THREE.SphereGeometry(1.6, 64, 64);
+            const globeMat = new THREE.MeshPhongMaterial({
+                color: 0x0f172a,
+                emissive: 0x050e1f,
+                shininess: 25,
+                wireframe: false
+            });
+            const globeMesh = new THREE.Mesh(globeGeo, globeMat);
+            globeGroup.add(globeMesh);
+
+            // Wireframe Grid Outer Sphere
+            const gridGeo = new THREE.SphereGeometry(1.61, 32, 32);
+            const gridMat = new THREE.MeshBasicMaterial({
+                color: 0x3b82f6,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.12
+            });
+            const gridMesh = new THREE.Mesh(gridGeo, gridMat);
+            globeGroup.add(gridMesh);
+
+            // Atmosphere Glow
+            const atmosGeo = new THREE.SphereGeometry(1.75, 32, 32);
+            const atmosMat = new THREE.MeshBasicMaterial({
+                color: 0x2563eb,
+                transparent: true,
+                opacity: 0.08,
+                side: THREE.BackSide
+            });
+            const atmosMesh = new THREE.Mesh(atmosGeo, atmosMat);
+            scene.add(atmosMesh);
+
+            // Add Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0x3b82f6, 1.2);
+            dirLight.position.set(5, 3, 5);
+            scene.add(dirLight);
+
+            // Region Pins / Hotspots
+            pinGroup = new THREE.Group();
+            globeGroup.add(pinGroup);
+
+            Object.keys(regionCoordinates).forEach(regKey => {
+                if (regKey === 'Global') return;
+                const coord = regionCoordinates[regKey];
+                const pos = latLonToVector3(coord.lat, coord.lon, 1.62);
+
+                const pinGeo = new THREE.SphereGeometry(0.05, 16, 16);
+                const pinMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
+                const pinMesh = new THREE.Mesh(pinGeo, pinMat);
+                pinMesh.position.copy(pos);
+                pinMesh.userData = { regionKey: regKey };
+                pinGroup.add(pinMesh);
+
+                // Pulse ring for pin
+                const ringGeo = new THREE.RingGeometry(0.06, 0.08, 16);
+                const ringMat = new THREE.MeshBasicMaterial({ color: 0x3b82f6, side: THREE.DoubleSide });
+                const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+                ringMesh.position.copy(pos);
+                ringMesh.lookAt(0, 0, 0);
+                pinGroup.add(ringMesh);
+            });
+
+            // Raycasting & Event Listeners
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            const canvas = document.getElementById('globeCanvas');
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                mouse.x = ((e.clientX - rect.left) / canvas.clientWidth) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / canvas.clientHeight) * 2 + 1;
+
+                if (isDragging) {
+                    const deltaX = e.clientX - previousMousePosition.x;
+                    const deltaY = e.clientY - previousMousePosition.y;
+
+                    globeGroup.rotation.y += deltaX * 0.005;
+                    globeGroup.rotation.x += deltaY * 0.005;
+
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                } else {
+                    // Hover Detection
+                    raycaster.setFromCamera(mouse, camera);
+                    const intersects = raycaster.intersectObjects(pinGroup.children);
+                    const tooltip = document.getElementById('globeTooltip');
+
+                    if (intersects.length > 0) {
+                        const targetPin = intersects[0].object;
+                        if (targetPin.userData && targetPin.userData.regionKey) {
+                            const reg = regionCoordinates[targetPin.userData.regionKey];
+                            document.getElementById('globeTooltipName').textContent = `${reg.flag} ${reg.name}`;
+                            tooltip.classList.remove('hidden');
+                        }
+                    } else {
+                        tooltip.classList.add('hidden');
+                    }
+                }
+            });
+
+            window.addEventListener('mouseup', () => { isDragging = false; });
+
+            canvas.addEventListener('click', () => {
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(pinGroup.children);
+                if (intersects.length > 0) {
+                    const targetPin = intersects[0].object;
+                    if (targetPin.userData && targetPin.userData.regionKey) {
+                        focusRegion(targetPin.userData.regionKey);
+                    }
+                }
+            });
+
+            // Responsive Resize Listener
+            window.addEventListener('resize', () => {
+                if (!renderer) return;
+                const w = container.clientWidth;
+                const h = container.clientHeight;
+                camera.aspect = w / h;
+                camera.updateProjectionMatrix();
+                renderer.setSize(w, h);
+            });
+
+            animateGlobe();
+        }
+
+        function latLonToVector3(lat, lon, radius) {
+            const phi = (90 - lat) * (Math.PI / 180);
+            const theta = (lon + 180) * (Math.PI / 180);
+
+            const x = -(radius * Math.sin(phi) * Math.cos(theta));
+            const z = (radius * Math.sin(phi) * Math.sin(theta));
+            const y = (radius * Math.cos(phi));
+
+            return new THREE.Vector3(x, y, z);
+        }
+
+        function focusRegion(regionKey) {
+            currentSelectedRegion = regionKey;
+            const reg = regionCoordinates[regionKey];
+            if (!reg) return;
+
+            // Update Header Display
+            document.getElementById('hdrActiveRegion').innerHTML = `<i class="fa-solid fa-earth-americas"></i> ${reg.flag} ${reg.name}`;
+            document.getElementById('rankerRegionFilter').value = regionKey;
+
+            if (regionKey === 'Global') {
+                targetCameraPos = { x: 0, y: 0, z: 5 };
+            } else {
+                const targetVec = latLonToVector3(reg.lat, reg.lon, reg.zoom);
+                targetCameraPos = { x: targetVec.x, y: targetVec.y, z: targetVec.z };
+            }
+
+            renderGlobeRegionList();
+            recalculateEngine();
+        }
+
+        function resetGlobeView() {
+            focusRegion('Global');
+        }
+
+        function animateGlobe() {
+            requestAnimationFrame(animateGlobe);
+
+            if (!isDragging) {
+                globeGroup.rotation.y += 0.0015; // Slow ambient rotation
+            }
+
+            // Smooth Interpolated Camera Zoom Animation
+            camera.position.x += (targetCameraPos.x - camera.position.x) * 0.05;
+            camera.position.y += (targetCameraPos.y - camera.position.y) * 0.05;
+            camera.position.z += (targetCameraPos.z - camera.position.z) * 0.05;
+            camera.lookAt(0, 0, 0);
+
+            renderer.render(scene, camera);
+        }
+
+        function renderGlobeRegionList() {
+            const container = document.getElementById('globeStockList');
+            const subtitle = document.getElementById('globeRegionSubtitle');
+            const badge = document.getElementById('regionBadge');
+            const regCount = document.getElementById('regionCount');
+            const regBeta = document.getElementById('regionBeta');
+
+            const filtered = currentSelectedRegion === 'Global' 
+                ? stockDatabase 
+                : stockDatabase.filter(s => s.country === currentSelectedRegion);
+
+            const regData = regionCoordinates[currentSelectedRegion];
+            subtitle.textContent = `Showing ${filtered.length} equities in ${regData.name}`;
+            badge.textContent = `${regData.flag} ${regData.name.toUpperCase()}`;
+            regCount.textContent = `${filtered.length} Equities`;
+
+            const avgBeta = (filtered.reduce((acc, curr) => acc + curr.beta, 0) / filtered.length).toFixed(2);
+            regBeta.textContent = `${avgBeta}x Avg Beta`;
+
+            container.innerHTML = '';
+            filtered.forEach(stock => {
+                const card = document.createElement('div');
+                card.className = 'p-3 rounded-xl border transition cursor-pointer flex justify-between items-center hover:scale-[1.01]';
+                card.style.backgroundColor = 'var(--bg-body)';
+                card.style.borderColor = 'var(--color-panel-border)';
+                card.onclick = () => loadInTerminal(stock.symbol);
+
+                card.innerHTML = `
+                    <div class="flex items-center space-x-2.5">
+                        <span class="text-lg">${stock.flag}</span>
+                        <div>
+                            <span class="font-bold text-xs block">${stock.symbol}</span>
+                            <span class="text-[10px] opacity-60 block">${stock.name} (${stock.sector})</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-bold text-xs block">$${stock.price.toFixed(2)}</span>
+                        <span class="text-[9px] font-bold px-2 py-0.5 rounded border" style="background-color: var(--color-brand-900); color: var(--color-brand-500); border-color: var(--color-brand-500);">
+                            Score ${stock.baseScore}
+                        </span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function onRankerRegionChange(val) {
+            currentSelectedRegion = val;
+            const reg = regionCoordinates[val];
+            if (reg) {
+                document.getElementById('hdrActiveRegion').innerHTML = `<i class="fa-solid fa-earth-americas"></i> ${reg.flag} ${reg.name}`;
+            }
+            renderGlobeRegionList();
+            recalculateEngine();
+        }
+
+        function setTheme(themeName) {
+            if (themeName === 'default') {
+                document.documentElement.removeAttribute('data-theme');
+            } else {
+                document.documentElement.setAttribute('data-theme', themeName);
+            }
+
+            document.querySelectorAll('.theme-dot').forEach(dot => dot.classList.remove('selected'));
+            event.target.classList.add('selected');
+
+            if (terminalChart) updateChartColors();
+        }
+
+        function switchTab(tab) {
+            const btnGlobe = document.getElementById('btnTabGlobe');
+            const btnRanker = document.getElementById('btnTabRanker');
+            const btnTerminal = document.getElementById('btnTabTerminal');
+            
+            const viewGlobe = document.getElementById('viewGlobe');
+            const viewRanker = document.getElementById('viewRanker');
+            const viewTerminal = document.getElementById('viewTerminal');
+
+            [btnGlobe, btnRanker, btnTerminal].forEach(b => {
+                b.classList.remove('active');
+                b.classList.add('opacity-70');
+            });
+
+            [viewGlobe, viewRanker, viewTerminal].forEach(v => v.classList.add('hidden'));
+
+            if (tab === 'globe') {
+                btnGlobe.classList.add('active');
+                btnGlobe.classList.remove('opacity-70');
+                viewGlobe.classList.remove('hidden');
+            } else if (tab === 'ranker') {
+                btnRanker.classList.add('active');
+                btnRanker.classList.remove('opacity-70');
+                viewRanker.classList.remove('hidden');
+            } else {
+                btnTerminal.classList.add('active');
+                btnTerminal.classList.remove('opacity-70');
+                viewTerminal.classList.remove('hidden');
+                
+                if (!terminalChart) {
+                    initChart();
+                } else {
+                    updateChartColors();
+                }
+            }
+        }
+
+        function recalculateEngine() {
+            const budget = parseFloat(document.getElementById('sliderBudget').value);
+            const volatility = parseFloat(document.getElementById('sliderVolatility').value);
+            const speed = parseInt(document.getElementById('sliderSpeed').value);
+            const leverage = parseFloat(document.getElementById('sliderLeverage').value);
+
+            // Update Labels
+            document.getElementById('valBudget').textContent = `$${budget.toLocaleString()}`;
+            document.getElementById('valVolatility').textContent = `${volatility.toFixed(1)}x (${volatility < 1.0 ? 'Low Risk' : volatility < 2.5 ? 'Balanced' : 'Extreme'})`;
+            document.getElementById('valSpeed').textContent = `${speed} ms`;
+            document.getElementById('valLeverage').textContent = `${leverage.toFixed(1)}x (${leverage > 1.0 ? 'Margin' : 'Spot'})`;
+
+            const totalBuyingPower = budget * leverage;
+            const maxRiskPerTrade = budget * 0.02 * (volatility / 1.5);
+
+            // Filter Stocks by Current Selected Region
+            const targetStocks = currentSelectedRegion === 'Global' 
+                ? stockDatabase 
+                : stockDatabase.filter(s => s.country === currentSelectedRegion);
+
+            const scoredStocks = targetStocks.map(stock => {
+                const volDelta = Math.abs(stock.beta - volatility);
+                const volMatchScore = Math.max(0, 30 - (volDelta * 12));
+                const leverageBonus = (stock.sharpe * leverage) * 5;
+
+                const finalScore = Math.min(99.9, Math.max(10, stock.baseScore + volMatchScore + leverageBonus - 15));
+                const monthlyYieldPct = stock.yieldBase * (volatility * 0.5 + 0.5) * (leverage * 0.7);
+                const projectedMonthlyUSD = (totalBuyingPower / 10) * monthlyYieldPct;
+
+                return {
+                    ...stock,
+                    calculatedScore: finalScore,
+                    monthlyYieldPct: monthlyYieldPct * 100,
+                    projectedMonthlyUSD: projectedMonthlyUSD
+                };
+            });
+
+            scoredStocks.sort((a, b) => b.calculatedScore - a.calculatedScore);
+
+            const totalEstMonthlyGain = scoredStocks.reduce((acc, curr) => acc + curr.projectedMonthlyUSD, 0);
+            const aggregateMonthlyYieldPct = (totalEstMonthlyGain / budget) * 100;
+
+            // Update Metric Cards
+            document.getElementById('hdrEstYield').textContent = `+$${totalEstMonthlyGain.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} (+${aggregateMonthlyYieldPct.toFixed(2)}%)`;
+            
+            document.getElementById('metricBudget').textContent = `$${budget.toLocaleString()}`;
+            document.getElementById('metricBuyingPower').textContent = `$${totalBuyingPower.toLocaleString()}`;
+            document.getElementById('metricMaxRisk').textContent = `$${maxRiskPerTrade.toLocaleString(undefined, {maximumFractionDigits: 2})} (${((maxRiskPerTrade/budget)*100).toFixed(1)}%)`;
+            document.getElementById('metricEstReturn').textContent = `+${(aggregateMonthlyYieldPct * 12).toFixed(1)}% / yr`;
+            if (scoredStocks.length > 0) {
+                document.getElementById('metricTopWinner').textContent = `${scoredStocks[0].symbol} (Score ${scoredStocks[0].calculatedScore.toFixed(1)})`;
+            }
+
+            renderRankingTable(scoredStocks, budget);
+            renderSideBySideComparison(scoredStocks);
+            restartTickSimulation(speed);
+        }
+
+        function renderRankingTable(stocks) {
+            const body = document.getElementById('rankingTableBody');
+            body.innerHTML = '';
+
+            stocks.forEach((stock, idx) => {
+                const tr = document.createElement('tr');
+                const isChecked = selectedForComparison.includes(stock.symbol);
+                tr.className = `hover:bg-black/10 transition border-b border-white/5 ${isChecked ? 'bg-black/20' : ''}`;
+
+                tr.innerHTML = `
+                    <td class="p-3 text-center">
+                        <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCompare('${stock.symbol}')" class="rounded cursor-pointer" style="accent-color: var(--color-brand-500);">
+                    </td>
+                    <td class="p-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold opacity-50 w-4">#${idx + 1}</span>
+                            <div>
+                                <span class="font-bold text-sm block cursor-pointer hover:underline" onclick="loadInTerminal('${stock.symbol}')">${stock.symbol}</span>
+                                <span class="text-[10px] opacity-60 block">${stock.name}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-3 opacity-80">${stock.flag} ${stock.country} / ${stock.sector}</td>
+                    <td class="p-3 font-semibold">$${stock.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td class="p-3">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-16 h-2 rounded-full overflow-hidden" style="background-color: var(--bg-body);">
+                                <div class="h-full" style="width: ${stock.calculatedScore}%; background-color: var(--color-brand-500);"></div>
+                            </div>
+                            <span class="font-bold" style="color: var(--color-accent-500);">${stock.calculatedScore.toFixed(1)}</span>
+                        </div>
+                    </td>
+                    <td class="p-3">
+                        <button onclick="loadInTerminal('${stock.symbol}')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border transition hover:opacity-90" style="background-color: var(--color-brand-900); color: var(--color-brand-500); border-color: var(--color-brand-500);">
+                            Trade
+                        </button>
+                    </td>
+                    <td class="p-3 text-right font-bold" style="color: var(--color-gain);">
+                        +$${stock.projectedMonthlyUSD.toFixed(2)}
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function toggleCompare(symbol) {
+            if (selectedForComparison.includes(symbol)) {
+                if (selectedForComparison.length > 1) {
+                    selectedForComparison = selectedForComparison.filter(s => s !== symbol);
+                }
+            } else {
+                if (selectedForComparison.length >= 2) selectedForComparison.shift();
+                selectedForComparison.push(symbol);
+            }
+            recalculateEngine();
+        }
+
+        function renderSideBySideComparison(allScoredStocks) {
+            const container = document.getElementById('comparisonContainer');
+            container.innerHTML = '';
+
+            const stockA = allScoredStocks.find(s => s.symbol === selectedForComparison[0]) || allScoredStocks[0];
+            const stockB = allScoredStocks.find(s => s.symbol === selectedForComparison[1]) || allScoredStocks[1] || allScoredStocks[0];
+
+            if (!stockA || !stockB) return;
+
+            const winner = stockA.calculatedScore >= stockB.calculatedScore ? stockA : stockB;
+            const scoreDiff = Math.abs(stockA.calculatedScore - stockB.calculatedScore).toFixed(1);
+
+            document.getElementById('matchupWinnerBadge').textContent = `WINNER: ${winner.symbol} (+${scoreDiff} Score Advantage)`;
+
+            [stockA, stockB].forEach((stock) => {
+                const isWinner = stock.symbol === winner.symbol;
+                
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-xl border font-mono transition-all ${isWinner ? 'shadow-lg' : 'opacity-90'}`;
+                card.style.backgroundColor = 'var(--bg-body)';
+                card.style.borderColor = isWinner ? 'var(--color-brand-500)' : 'var(--color-panel-border)';
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-3 border-b pb-2" style="border-color: var(--color-panel-border);">
+                        <div>
+                            <span class="text-xs font-bold" style="color: ${isWinner ? 'var(--color-brand-500)' : 'var(--text-muted)'}">${isWinner ? '★ WINNING OPTION' : 'ALTERNATIVE MATCH'}</span>
+                            <h4 class="text-base font-bold flex items-center gap-1.5">${stock.flag} ${stock.symbol}</h4>
+                            <p class="text-[10px] opacity-60">${stock.name}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs opacity-60">Score</span>
+                            <div class="text-lg font-bold" style="color: ${isWinner ? 'var(--color-gain)' : 'var(--text-main)'}">${stock.calculatedScore.toFixed(1)}</div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between">
+                            <span class="opacity-60">Country / Sector:</span>
+                            <span>${stock.country} / ${stock.sector}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="opacity-60">Market Beta:</span>
+                            <span class="font-bold" style="color: var(--color-accent-500);">${stock.beta}x</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="opacity-60">Sharpe Ratio:</span>
+                            <span>${stock.sharpe}</span>
+                        </div>
+                        <div class="flex justify-between border-t pt-2" style="border-color: var(--color-panel-border);">
+                            <span class="opacity-60">Est. Monthly Gain:</span>
+                            <span class="font-bold" style="color: var(--color-gain);">+$${stock.projectedMonthlyUSD.toFixed(2)}</span>
+                        </div>
+                        <button onclick="loadInTerminal('${stock.symbol}')" class="w-full mt-2 text-white font-bold py-1.5 rounded transition text-[11px] hover:opacity-90" style="background-color: var(--color-brand-600);">
+                            Load in Live Terminal
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function loadInTerminal(symbol) {
+            activeTerminalSymbol = symbol;
+            switchTab('terminal');
+            updateTerminalView();
+        }
+
+        function updateTerminalView() {
+            const stock = stockDatabase.find(s => s.symbol === activeTerminalSymbol);
+            if (!stock) return;
+
+            document.getElementById('chartSymbol').textContent = `${stock.flag} ${stock.symbol}`;
+            document.getElementById('chartPrice').textContent = `$${stock.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            
+            if (terminalChart) {
+                terminalChart.data.labels = stock.history.map((_, i) => `T-${30 - i}`);
+                terminalChart.data.datasets[0].data = [...stock.history];
+                updateChartColors();
+            }
+
+            renderWatchlist();
+            renderPositions();
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('terminalChart').getContext('2d');
+            const stock = stockDatabase.find(s => s.symbol === activeTerminalSymbol);
+
+            const computedStyle = getComputedStyle(document.documentElement);
+            const gainColor = computedStyle.getPropertyValue('--color-gain').trim() || '#10b981';
+            const gridColor = computedStyle.getPropertyValue('--chart-grid').trim() || 'rgba(255, 255, 255, 0.05)';
+
+            terminalChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: stock.history.map((_, i) => `T-${30 - i}`),
+                    datasets: [{
+                        label: 'Price (USD)',
+                        data: [...stock.history],
+                        borderColor: gainColor,
+                        backgroundColor: gainColor + '15',
+                        fill: true,
+                        tension: 0.25,
+                        borderWidth: 2,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: {
+                            grid: { color: gridColor },
+                            ticks: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChartColors() {
+            if (!terminalChart) return;
+            const computedStyle = getComputedStyle(document.documentElement);
+            const gainColor = computedStyle.getPropertyValue('--color-gain').trim() || '#10b981';
+            const gridColor = computedStyle.getPropertyValue('--chart-grid').trim() || 'rgba(255, 255, 255, 0.05)';
+
+            terminalChart.data.datasets[0].borderColor = gainColor;
+            terminalChart.data.datasets[0].backgroundColor = gainColor + '15';
+            terminalChart.options.scales.y.grid.color = gridColor;
+            terminalChart.update();
+        }
+
+        function renderWatchlist() {
+            const container = document.getElementById('watchlistContainer');
+            container.innerHTML = '';
+
+            stockDatabase.forEach(stock => {
+                const isSelected = stock.symbol === activeTerminalSymbol;
+                const div = document.createElement('div');
+                div.className = `p-2.5 rounded-xl border transition cursor-pointer flex justify-between items-center ${isSelected ? 'shadow-md' : 'opacity-80 hover:opacity-100'}`;
+                div.style.backgroundColor = isSelected ? 'var(--color-brand-900)' : 'var(--bg-body)';
+                div.style.borderColor = isSelected ? 'var(--color-brand-500)' : 'var(--color-panel-border)';
+                div.onclick = () => loadInTerminal(stock.symbol);
+
+                div.innerHTML = `
+                    <div>
+                        <span class="font-bold text-xs block">${stock.flag} ${stock.symbol}</span>
+                        <span class="text-[9px] opacity-60 block">${stock.country} / ${stock.sector}</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-bold text-xs block">$${stock.price.toFixed(2)}</span>
+                        <span class="text-[9px] font-semibold" style="color: var(--color-gain);">+${(stock.momentum * 3).toFixed(1)}%</span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function executeTrade(type) {
+            const amount = parseFloat(document.getElementById('orderAmount').value);
+            const leverage = parseFloat(document.getElementById('orderLeverage').value);
+            const stock = stockDatabase.find(s => s.symbol === activeTerminalSymbol);
+
+            if (amount > portfolioBalance) {
+                const msg = document.createElement('div');
+                msg.className = 'fixed bottom-5 right-5 bg-rose-600 text-white px-4 py-2 rounded-xl font-mono text-xs shadow-2xl z-50';
+                msg.textContent = '⚠️ Insufficient cash balance to place this order.';
+                document.body.appendChild(msg);
+                setTimeout(() => msg.remove(), 2500);
+                return;
+            }
+
+            portfolioBalance -= amount;
+            document.getElementById('orderAvailableCash').textContent = `$${portfolioBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+            openPositions.push({
+                id: Date.now(),
+                symbol: stock.symbol,
+                type: type,
+                entryPrice: stock.price,
+                amount: amount,
+                leverage: leverage,
+                pnl: 0
+            });
+
+            renderPositions();
+        }
+
+        function closePosition(id) {
+            const posIdx = openPositions.findIndex(p => p.id === id);
+            if (posIdx !== -1) {
+                const pos = openPositions[posIdx];
+                portfolioBalance += pos.amount + pos.pnl;
+                openPositions.splice(posIdx, 1);
+
+                document.getElementById('orderAvailableCash').textContent = `$${portfolioBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                renderPositions();
+            }
+        }
+
+        function renderPositions() {
+            const container = document.getElementById('positionsList');
+            document.getElementById('activePositionsCount').textContent = `${openPositions.length} Open`;
+
+            if (openPositions.length === 0) {
+                container.innerHTML = `<div class="text-center py-10 text-[11px] opacity-50">No active positions.<br>Execute orders from the panel.</div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            openPositions.forEach(pos => {
+                const stock = stockDatabase.find(s => s.symbol === pos.symbol);
+                const priceDiff = stock.price - pos.entryPrice;
+                const pnl = (pos.type === 'BUY' ? priceDiff : -priceDiff) / pos.entryPrice * pos.amount * pos.leverage;
+                pos.pnl = pnl;
+
+                const card = document.createElement('div');
+                card.className = 'p-2.5 rounded-xl border flex justify-between items-center';
+                card.style.backgroundColor = 'var(--bg-body)';
+                card.style.borderColor = 'var(--color-panel-border)';
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center space-x-1.5">
+                            <span class="font-bold text-xs">${pos.symbol}</span>
+                            <span class="text-[9px] px-1 py-0.2 rounded font-bold text-white" style="background-color: ${pos.type === 'BUY' ? 'var(--color-gain)' : 'var(--color-loss)'}">${pos.type} ${pos.leverage}x</span>
+                        </div>
+                        <span class="text-[10px] opacity-60 block">Entry: $${pos.entryPrice.toFixed(2)}</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-bold text-xs block" style="color: ${pnl >= 0 ? 'var(--color-gain)' : 'var(--color-loss)'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</span>
+                        <button onclick="closePosition(${pos.id})" class="text-[9px] opacity-70 hover:opacity-100 px-2 py-0.5 rounded transition mt-0.5 border" style="background-color: var(--color-panel-header); border-color: var(--color-panel-border);">Close</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function initNewsFeed() {
+            const news = [
+                { time: '2m ago', title: 'Asian markets rally as tech export estimates break quarterly records.', bullish: true },
+                { time: '12m ago', title: 'European Central Bank maintains key interest rate trajectory.', bullish: true },
+                { time: '28m ago', title: 'U.S. semiconductor demand hits historic multi-year peak.', bullish: true },
+                { time: '45m ago', title: 'Latin American energy sector sees strong institutional capital inflow.', bullish: true }
+            ];
+
+            const container = document.getElementById('newsFeed');
+            container.innerHTML = '';
+            news.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'p-2 rounded-lg border';
+                div.style.backgroundColor = 'var(--bg-body)';
+                div.style.borderColor = 'var(--color-panel-border)';
+
+                div.innerHTML = `
+                    <div class="flex justify-between text-[9px] opacity-60 mb-0.5">
+                        <span>${item.time}</span>
+                        <span class="font-bold" style="color: var(--color-gain);">BULLISH</span>
+                    </div>
+                    <div class="leading-tight text-[11px] font-sans opacity-90">${item.title}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function restartTickSimulation(speed) {
+            if (simIntervalId) clearInterval(simIntervalId);
+
+            simIntervalId = setInterval(() => {
+                const volatility = parseFloat(document.getElementById('sliderVolatility').value);
+
+                stockDatabase.forEach(stock => {
+                    const deltaPct = (Math.random() - 0.485) * (0.005 * stock.beta * volatility);
+                    stock.price = Math.max(1, stock.price * (1 + deltaPct));
+                    stock.history.push(stock.price);
+                    if (stock.history.length > 30) stock.history.shift();
+                });
+
+                if (!document.getElementById('viewTerminal').classList.contains('hidden')) {
+                    updateTerminalView();
+                }
+            }, speed);
+        }
+
+        function resetSliders() {
+            document.getElementById('sliderBudget').value = 50000;
+            document.getElementById('sliderVolatility').value = 1.5;
+            document.getElementById('sliderSpeed').value = 800;
+            document.getElementById('sliderLeverage').value = 1.0;
+            recalculateEngine();
+        }
+
+        // INITIALIZE APPLICATION
+        window.onload = function() {
+            initGlobe();
+            renderGlobeRegionList();
+            recalculateEngine();
+            initNewsFeed();
+        };
+    </script>
+</body>
+</html>
